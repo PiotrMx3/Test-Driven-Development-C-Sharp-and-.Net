@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using AdamTibi.OpenWeather;
+using Uqs.Weather.Wrappers;
 
 namespace Uqs.Weather.Controllers;
 
@@ -11,6 +12,7 @@ public class WeatherForecastController : ControllerBase
     private readonly ILogger<WeatherForecastController> _logger;
     private readonly IConfiguration _config;
     private readonly IClient _client;
+    private readonly INowWrapper _nowWrapper;
 
     private static readonly string[] Summaries = new[]
     {
@@ -18,11 +20,12 @@ public class WeatherForecastController : ControllerBase
         "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration config, IClient client)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration config, IClient client, INowWrapper noWrapper)
     {
         this._logger = logger;
         this._config = config;
         this._client = client;
+        this._nowWrapper = noWrapper;
     }
 
     [HttpGet("ConvertCToF")]
@@ -41,7 +44,7 @@ public class WeatherForecastController : ControllerBase
 
 
 
-        // DI Container //
+        // DI Container 
 
         // string apiKey = _config["OpenWeather:Key"];
         // HttpClient httpClient = new HttpClient();
@@ -69,6 +72,8 @@ public class WeatherForecastController : ControllerBase
         return wfs;
     }
 
+
+
     [HttpGet("GetRandomWeatherForecast")]
     public IEnumerable<WeatherForecast> GetRandom()
     {
@@ -77,13 +82,21 @@ public class WeatherForecastController : ControllerBase
         for (int i = 0; i < wfs.Length; i++)
         {
             var wf = wfs[i] = new WeatherForecast();
-            wf.Date = DateTime.Now.AddDays(i + 1);
+
+            // DI Container
+
+            // wf.Date = DateTime.Now.AddDays(i + 1);
+
+            wf.Date = _nowWrapper.Now.AddDays(i + 1);
+
             wf.TemperatureC = Random.Shared.Next(-20, 55);
             wf.Summary = MapFeelToTemp(wf.TemperatureC);
         }
 
         return wfs;
     }
+
+
 
     private static string MapFeelToTemp(int temperatureC)
     {

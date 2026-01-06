@@ -1,5 +1,6 @@
 using AdamTibi.OpenWeather;
 using System.Linq.Expressions;
+using Uqs.Weather.Wrappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,10 @@ builder.Services.AddSingleton<IClient>(_ => {
     HttpClient httpClient = new HttpClient();
 
     return new OneCall30Client(apiKey, httpClient);
+});
+
+builder.Services.AddSingleton<INowWrapper>(_ => {
+    return new NowWrapper();
 });
 
 
