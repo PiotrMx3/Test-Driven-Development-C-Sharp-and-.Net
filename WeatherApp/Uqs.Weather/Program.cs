@@ -1,28 +1,40 @@
 using AdamTibi.OpenWeather;
 using System.Linq.Expressions;
+using Uqs.Weather;
 using Uqs.Weather.Wrappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddSingleton<IClient>(_ => {
+builder.Services.AddSingleton<IClient>(_ =>
+{
 
-   string apiKey = builder.Configuration["OpenWeather:Key"];
+    bool isLoad = bool.Parse(builder.Configuration["LoadTest:isActive"]);
 
-    HttpClient httpClient = new HttpClient();
+    if (isLoad)
+    {
+        return new ClientStub();
+    }
+    else
+    {
+        string apiKey = builder.Configuration["OpenWeather:Key"];
+        HttpClient httpClient = new HttpClient();
 
-    return new OneCall30Client(apiKey, httpClient);
+        return new OneCall30Client(apiKey, httpClient);
+    }
+
 });
 
-builder.Services.AddSingleton<INowWrapper>(_ => {
+builder.Services.AddSingleton<INowWrapper>(_ =>
+{
     return new NowWrapper();
 });
 
-builder.Services.AddTransient<IRandomWrapper>(_ => {
+builder.Services.AddTransient<IRandomWrapper>(_ =>
+{
     return new RandomWrapper();
 });
-
 
 
 builder.Services.AddControllers();
