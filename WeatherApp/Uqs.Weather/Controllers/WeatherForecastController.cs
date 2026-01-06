@@ -10,6 +10,7 @@ public class WeatherForecastController : ControllerBase
     private const int FORECAST_DAYS = 7;
     private readonly ILogger<WeatherForecastController> _logger;
     private readonly IConfiguration _config;
+    private readonly IClient _client;
 
     private static readonly string[] Summaries = new[]
     {
@@ -17,10 +18,11 @@ public class WeatherForecastController : ControllerBase
         "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration config)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration config, IClient client)
     {
-        _logger = logger;
-        _config = config;
+        this._logger = logger;
+        this._config = config;
+        this._client = client;
     }
 
     [HttpGet("ConvertCToF")]
@@ -37,21 +39,28 @@ public class WeatherForecastController : ControllerBase
         decimal ANTWERPEN_LAT = 51.2194m;
         decimal ANTWERPEN_LON = 4.4025m;
 
-        string apiKey = _config["OpenWeather:Key"];
 
-        HttpClient httpClient = new HttpClient();
 
-        OneCall30Client openWeatherClient = new OneCall30Client(apiKey, httpClient);
+        // DI Container //
 
-        OneCallResponse res = await openWeatherClient.OneCallAsync
-            (ANTWERPEN_LAT, ANTWERPEN_LON, new [] {
+        // string apiKey = _config["OpenWeather:Key"];
+        // HttpClient httpClient = new HttpClient();
+        // OneCall30Client openWeatherClient = new OneCall30Client(apiKey, httpClient);
+
+        OneCallResponse res = await _client.OneCallAsync
+            (
+                ANTWERPEN_LAT, ANTWERPEN_LON,
+                new[] {
                 Excludes.Current, Excludes.Minutely,
-                Excludes.Hourly, Excludes.Alerts }, Units.Metric);
+                Excludes.Hourly, Excludes.Alerts }, Units.Metric
+             );
 
         WeatherForecast[] wfs = new WeatherForecast[FORECAST_DAYS];
+
         for (int i = 0; i < wfs.Length; i++)
         {
             var wf = wfs[i] = new WeatherForecast();
+
             wf.Date = res.Daily[i + 1].Dt;
             double forecastedTemp = res.Daily[i + 1].Temp.Day;
             wf.TemperatureC = (int)Math.Round(forecastedTemp);
@@ -64,13 +73,15 @@ public class WeatherForecastController : ControllerBase
     public IEnumerable<WeatherForecast> GetRandom()
     {
         WeatherForecast[] wfs = new WeatherForecast[FORECAST_DAYS];
-        for(int i = 0;i < wfs.Length;i++)
+
+        for (int i = 0; i < wfs.Length; i++)
         {
             var wf = wfs[i] = new WeatherForecast();
             wf.Date = DateTime.Now.AddDays(i + 1);
             wf.TemperatureC = Random.Shared.Next(-20, 55);
             wf.Summary = MapFeelToTemp(wf.TemperatureC);
         }
+
         return wfs;
     }
 
