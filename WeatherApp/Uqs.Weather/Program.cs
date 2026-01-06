@@ -6,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-
 builder.Services.AddSingleton<IClient>(_ => {
 
    string apiKey = builder.Configuration["OpenWeather:Key"];
@@ -19,6 +18,11 @@ builder.Services.AddSingleton<IClient>(_ => {
 builder.Services.AddSingleton<INowWrapper>(_ => {
     return new NowWrapper();
 });
+
+builder.Services.AddTransient<IRandomWrapper>(_ => {
+    return new RandomWrapper();
+});
+
 
 
 builder.Services.AddControllers();

@@ -10,9 +10,9 @@ public class WeatherForecastController : ControllerBase
 {
     private const int FORECAST_DAYS = 7;
     private readonly ILogger<WeatherForecastController> _logger;
-    private readonly IConfiguration _config;
     private readonly IClient _client;
     private readonly INowWrapper _nowWrapper;
+    private readonly IRandomWrapper _randWrapper;
 
     private static readonly string[] Summaries = new[]
     {
@@ -20,12 +20,12 @@ public class WeatherForecastController : ControllerBase
         "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration config, IClient client, INowWrapper noWrapper)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, IClient client, INowWrapper noWrapper, IRandomWrapper randomWrapper)
     {
         this._logger = logger;
-        this._config = config;
         this._client = client;
         this._nowWrapper = noWrapper;
+        this._randWrapper = randomWrapper;
     }
 
     [HttpGet("ConvertCToF")]
@@ -84,12 +84,14 @@ public class WeatherForecastController : ControllerBase
             var wf = wfs[i] = new WeatherForecast();
 
             // DI Container
-
             // wf.Date = DateTime.Now.AddDays(i + 1);
-
             wf.Date = _nowWrapper.Now.AddDays(i + 1);
 
-            wf.TemperatureC = Random.Shared.Next(-20, 55);
+            // DI Container
+            // wf.TemperatureC = Random.Shared.Next(-20, 55);
+            wf.TemperatureC = _randWrapper.Next(-20,55);
+
+
             wf.Summary = MapFeelToTemp(wf.TemperatureC);
         }
 
